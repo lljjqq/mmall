@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.mmall.dao.cart.CartMapper">
+    <resultMap id="BaseResultMap" type="Cart">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="quantity" column="quantity"/>
+        <result property="checked" column="checked"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id,user_id,product_id,quantity,checked,create_time,update_time
+    </sql>
+
+    <!--判断这个用户在这个表示是否有未勾选，如果有就不是勾选，如果没有就是全选-->
+    <select id="selectCartProductCheckedStatusByUserId" resultType="int" parameterType="integer">
+        SELECT  count(1) from mmall_cart where checked = 0 and user_id = #{userId}
+    </select>
+
+    <!--通过用户ID和产品ID查到这个购物车-->
+    <select id="selectCartByUserIdProductId" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from mmall_cart
+        where user_id = #{userId}
+        and product_id = #{productId}
+    </select>
+
+    <!--根据用户id查购物车的集合-->
+    <select id="selectCartByUserId" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from mmall_cart
+        where user_id = #{userId}
+    </select>
+
+    <!--插入-->
+    <insert id="insert" parameterType="Cart">
+        insert into mmall_cart (id, user_id, product_id,quantity, checked, create_time,update_time)
+        values (#{id}, #{userId}, #{productId},#{quantity}, #{checked}, now(),now())
+    </insert>
+
+    <!--更新-->
+    <update id="updateByPrimaryKeySelective" parameterType="Cart">
+        update mmall_cart
+        <set>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+            <if test="productId != null">
+                product_id = #{productId},
+            </if>
+            <if test="quantity != null">
+                quantity = #{quantity},
+            </if>
+            <if test="checked != null">
+                checked = #{checked},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime},
+            </if>
+            <if test="updateTime != null">
+                update_time = now(),
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--根据用户id和产品id删除-->
+    <delete id="deleteCartByUserIdProductIds" parameterType="map">
+        delete from mmall_cart
+        where user_id = #{userId}
+        <if test="productIdList != null">
+            and product_id in
+            <foreach collection="productIdList" item="item" index="index" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </delete>
+
+    <!--根据controller传的不同的参数来判断是否是全选还是全反选-->
+    <update id="checkedOrUncheckedProduct" parameterType="map">
+        UPDATE mmall_cart
+        set checked = #{checked},
+        update_time = now()
+        where user_id = #{userId}
+        <if test="productId != null">
+            and product_id = #{productId}
+        </if>
+    </update>
+
+    <!--这里使用一个mybatis的内置函数，其意就是如果查询出来的sum是个空的话也就是说userID在这个表里不存在,空是无法赋予给基本类型的,-->
+    <select id="getCartProductCount" resultType="int" parameterType="int">
+        select IFNULL(SUM(quantity),0) as count from mmall_cart where user_id = #{userId}
+    </select>
+
+    <select id="selectCheckedCartByUserId" parameterType="int" resultMap="BaseResultMap">
+          select
+          <include refid="Base_Column_List"/>
+        from mmall_cart
+        where user_id = #{userId}
+        and cheked = 1
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="Cart" >
+        delete from mmall_cart
+        where id = #{id}
+    </delete>
+</mapper>

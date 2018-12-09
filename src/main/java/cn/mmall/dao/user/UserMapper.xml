@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.mmall.dao.user.UserMapper">
+
+    <resultMap id="BaseResultMap" type="User">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="email" column="email"/>
+        <result property="phone" column="phone"/>
+        <result property="question" column="question"/>
+        <result property="answer" column="answer"/>
+        <result property="role" column="role"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="Base_Column_List" >
+          id, username, password, email, phone, question, answer, role, create_time, update_time
+    </sql>
+
+    <!--查询用户详细信息-->
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" >
+        select
+        <include refid="Base_Column_List"/>
+        from mmall_user
+        where id = #{id}
+    </select>
+    <!--查询用户名-->
+    <select id="checkUsername" resultType="int">
+        select count(1) from mmall_user
+        where username = #{username}
+    </select>
+
+    <!--查询email-->
+    <select id="checkEmail" resultType="int">
+        select count(1) from mmall_user
+        where email = #{email}
+    </select>
+
+    <!--用户登陆-->
+    <select id="selectLogin" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        from mmall_user
+        where username = #{username}
+        and password = #{password}
+    </select>
+
+    <!--用户注册-->
+    <insert id="insert" parameterType="User">
+        insert into mmall_user (id, username, password,
+          email, phone, question,
+          answer, role, create_time,
+          update_time)
+        values (#{id}, #{username}, #{password},
+          #{email}, #{phone}, #{question},
+          #{answer}, #{role}, now(),
+          now())
+    </insert>
+
+    <!--查询找回密码问题-->
+    <select id="selectQuestionByUsername" resultType="String">
+        select question
+        from mmall_user
+        where username = #{username}
+    </select>
+
+    <!--查询问题答案-->
+    <select id="checkAnswer" resultType="int">
+        select count(1)
+        from mmall_user
+        where username = #{username}
+        and question = #{question}
+        and answer = #{answer}
+    </select>
+
+    <!--重置密码-->
+    <update id="updatePasswordByUsername" parameterType="map">
+        update mmall_user
+        set password = #{passwordNew},update_time = now()
+        where username = #{username}
+    </update>
+
+    <!---->
+    <select id="checkPassword" resultType="int">
+        select
+        count(1)
+        from mmall_user
+        where password = #{password}
+        and id = #{userId}
+    </select>
+
+    <!---->
+    <select id="checkEmailByUserId" resultType="int">
+        select count(1) from mmall_user
+        where email = #{email}
+        and id != #{userId}
+    </select>
+
+    <!--根据主键更新，不为空的属性-->
+    <update id="updateByPrimaryKeySelective" parameterType="User">
+        update mmall_user
+        <set>
+            <if test="username != null">
+                username = #{username,jdbcType=VARCHAR},
+            </if>
+            <if test="password != null">
+                password = #{password,jdbcType=VARCHAR},
+            </if>
+            <if test="email != null">
+                email = #{email,jdbcType=VARCHAR},
+            </if>
+            <if test="phone != null">
+                phone = #{phone,jdbcType=VARCHAR},
+            </if>
+            <if test="question != null">
+                question = #{question,jdbcType=VARCHAR},
+            </if>
+            <if test="answer != null">
+                answer = #{answer,jdbcType=VARCHAR},
+            </if>
+            <if test="role != null">
+                role = #{role,jdbcType=INTEGER},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null">
+                update_time = now(),
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+
+
+</mapper>
